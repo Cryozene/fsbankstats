@@ -30,7 +30,7 @@ sheet_name = 'RawDonationData'
 starting_date = datetime.fromisoformat('2020-02-07')-timedelta(hours=2)
 
 #path to pytesseract executable
-pytesseract.pytesseract.tesseract_cmd = r'H:/Other/Tesseract-OCR/tesseract'
+pytesseract.pytesseract.tesseract_cmd = r'path_to_pytesseract_executable'
 
 #path to google OAuth2 credentials
 credential_path = 'credentials.json'
