@@ -126,7 +126,9 @@ class MainGUI:
                 donation = re.search(r'(\d{1,3},)*\d{1,3}$', line, ).group(0)
                 #captures any names including multiple words, stopping at & excluding words only consisting of numbers and/or commas, 
                 #technical filter at the start of a line: may start with leftover textures that tesseract detects as characters ")" or "|"
-                name = re.search(r'^(?:[|)]? ?)\w+(\s\w+[^\d\W,]\w+)*', line).group(0) 
+                name = re.search(r'^(?:[|)]? ?)\w+(\s\w+[^\d\W,]\w+)*', line).group(0)
+                while name[0] in " |)":
+                    name = name[1:]
                 donation = int(donation.replace(',', ''))
                 print([name.lower(), donation])
                 out.append([name.lower(), donation])
