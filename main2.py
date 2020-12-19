@@ -5,6 +5,7 @@ import os.path
 from datetime import date, datetime, timedelta
 import pytz
 import re
+import difflib
 
 #tesseract for reading images
 import pytesseract
@@ -21,11 +22,11 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 #sheet and starting date
 ###TEST Sheet APITest
-#workbook_id = 'sheetID_here'
+#workbook_id = 'enter_sheetID_here'
 #sheet_name = 'Sheet1'
 
 ###CrybabyDonationsAnon
-workbook_id = 'sheetID_here'
+workbook_id = '1eaCElAJjZBg1LitGPcm6nHQz7Z4YVjv1KLBxAbea68c'
 sheet_name = 'RawDonationData'
 starting_date = datetime.fromisoformat('2020-02-07')-timedelta(hours=2)
 
@@ -123,10 +124,10 @@ class MainGUI:
             try: 
                 print(line)
                 #captures any comma-separated number at then end of the string in the format 
-                donation = re.search(r'(\d{1,3},)*\d{1,3}$', line, ).group(0)
+                donation = re.search(r'(\d{1,3},)*\d{1,3}$', line).group(0)
                 #captures any names including multiple words, stopping at & excluding words only consisting of numbers and/or commas, 
                 #technical filter at the start of a line: may start with leftover textures that tesseract detects as characters ")" or "|"
-                name = re.search(r'^(?:[|)]? ?)\w+(\s\w+[^\d\W,]\w+)*', line).group(0)
+                name = re.search(r'(\s?\w*[^\d\W,]+\w+)+', line).group(0)
                 while name[0] in " |)":
                     name = name[1:]
                 donation = int(donation.replace(',', ''))
@@ -168,8 +169,13 @@ class MainGUI:
             except ValueError:
                 #self.insertNewMemberColumns(wb, sheet, memberlist)
                 #print('inserted new member')
-                print("member not found: " + name + " Value: " + str(value))
-                continue
+                match = match1list(name, memberlist)
+                if len(match)==1:                 
+                    column = column = memberlist.index(match[0])+1
+                    print("member replaced " + name + " with: " + column)
+                else:
+                    print("member not found: " + name + " Value: " + str(value))
+                    continue
             sheet.update_cell(donationRow, column, value)
         self.capturedLabel['text'] = 'Done!'
 
@@ -201,6 +207,42 @@ class MainGUI:
         }
         wb.batch_update(body)
 
+####helper
+
+#matches 1 string with a list of strings with maximum 1 letter difference
+def match1list(s, l):
+    matches = []
+    for candidate in l:
+        if match1(s, candidate):
+            matches.append(candidate)
+    return matches
+
+#matches two strings with maximum 1 letter difference
+def match1(s1, s2):
+    ok = False
+
+    for c1, c2 in zip(s1, s2):
+        if c1 != c2:
+            if ok:
+                return False
+            else:
+                ok = True
+
+    return ok
+
+#returns difference between two strings as an int of needed operations
+def memberdiff(m1, m2):
+    for i,s in enumerate(difflib.ndiff(m1, m2)):
+        print(s)
+        if s[0]==' ': continue
+        elif s[0]=='-':
+            print(u'Delete "{}" from position {}'.format(s[-1],i))
+        elif s[0]=='+':
+            print(u'Add "{}" to position {}'.format(s[-1],i))    
+    print()
+
+
+#standalone
 def main():
     gui = MainGUI()
     
